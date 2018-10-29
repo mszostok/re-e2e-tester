@@ -1,0 +1,94 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: testing-re-e2e
+  namespace: kyma-system
+spec:
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: testing-re-e2e
+        spec:
+          serviceAccountName: testing-re-e2e
+          containers:
+          - name: tester
+            image: mszostok/re-e2e-test:0.0.1
+          restartPolicy: Never
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: testing-re-e2e
+  namespace: kyma-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: testing-re-e2e
+rules:
+- apiGroups: ["servicecatalog.k8s.io"]
+  resources: ["clusterserviceclasses"]
+  verbs: ["list", "delete", "get"]
+  nonResourceURLs: []
+- apiGroups: ["servicecatalog.k8s.io"]
+  resources: ["clusterserviceplans"]
+  verbs: ["list", "delete"]
+  nonResourceURLs: []
+- apiGroups: ["servicecatalog.k8s.io"]
+  resources: ["serviceinstances", "servicebindings"]
+  verbs: ["get", "delete", "create", "list"]
+  nonResourceURLs: []
+- apiGroups: ["servicecatalog.k8s.io"]
+  resources: ["servicebrokers"]
+  verbs: ["get"]
+- apiGroups: ["servicecatalog.k8s.io"]
+  resources: ["serviceclasses"]
+  verbs: ["get", "list"]
+- apiGroups: ["servicecatalog.kyma.cx"]
+  resources: ["servicebindingusages"]
+  verbs: ["get", "delete", "create", "list"]
+  nonResourceURLs: []
+- apiGroups: ["applicationconnector.kyma-project.io"]
+  resources: ["remoteenvironments", "environmentmappings"]
+  verbs: ["create", "delete"]
+  nonResourceURLs: []
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["create", "delete", "get", "list"]
+  nonResourceURLs: []
+- apiGroups: [""]
+  resources: ["services", "namespaces", "pods", "pods/log", "events", "configmaps", "serviceaccounts"]
+  verbs: ["create", "delete", "get", "list", "update"]
+  nonResourceURLs: []
+- apiGroups: ["config.istio.io"]
+  resources: ["rules", "checknothings", "deniers"]
+  verbs: ["create", "delete", "get", "list"]
+  nonResourceURLs: []
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles", "rolebindings"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/portforward"]
+  verbs: ["create"]
+  nonResourceURLs: []
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: testing-re-e2e
+subjects:
+- kind: ServiceAccount
+  name: testing-re-e2e
+  namespace: kyma-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: testing-re-e2e

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-core-core-acceptance
+  annotations:
+    "helm.sh/hook": test-success
+  labels:
+    "helm-chart-test": "true"
+spec:
+  serviceAccountName:  test-core-core-acceptance
+  containers:
+  - name: tester
+    image: {{ .Values.image.name }}:{{ .Values.image.version }}
+    command: ["./remote-environment.test"]
+    env:
+    - name: HELM_BROKER_URL
+      value: http://core-helm-broker.kyma-system.svc.cluster.local
+    - name: RELEASE_NAMESPACE
+      value: {{ .Values.rebRealesNamespace }}
+    - name: IS_LOCAL_ENV
+      value: "false"
+    - name: STUBS_DOCKER_IMAGE
+      value: {{ .Values.image.name }}:{{ .Values.image.version }}
+    - name: REMOTE_ENVIRONMENT_UNLINKING_TIMEOUT
+      value: "4m"
+    - name: REMOTE_ENVIRONMENT_LINKING_TIMEOUT
+      value: "4m"
+    - name: REMOTE_ENVIRONMENT_KEEP_RESOURCES
+      value: "false"
+    - name: REMOTE_ENVIRONMENT_DISABLED
+      value: "false"
+  restartPolicy: Never

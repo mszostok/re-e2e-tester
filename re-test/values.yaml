@@ -1,0 +1,5 @@
+image:
+  name: "eu.gcr.io/kyma-project/develop/acceptance-tests"
+  version: "014de52c"
+
+rebReleaseNamespace: "kyma-integration"
